@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
+
+Direction = Literal["up", "down", "unchanged"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +21,7 @@ class PriceUpdate:
     price: float
     prev_price: float
     timestamp: datetime
-    direction: str  # "up", "down", or "unchanged"
+    direction: Direction
 
     def to_dict(self) -> dict:
         """Serialize to a dict suitable for JSON encoding in the SSE stream."""

@@ -52,12 +52,13 @@ class SimulatorMarketData(MarketDataSource):
 
     def register_ticker(self, ticker: str, seed_price: float | None = None) -> None:
         """Add a ticker to the simulation."""
-        self._engine.add_ticker(ticker, seed_price)
+        self._engine.add_ticker(ticker.upper(), seed_price)
 
     def unregister_ticker(self, ticker: str) -> None:
         """Remove a ticker from the simulation and price cache."""
+        ticker = ticker.upper()
         self._engine.remove_ticker(ticker)
-        self._cache.remove(ticker.upper())
+        self._cache.remove(ticker)
 
     def get_latest(self, ticker: str) -> PriceUpdate | None:
         """Get the most recent simulated price for a ticker."""

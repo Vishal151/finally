@@ -14,7 +14,7 @@ from .models import PriceUpdate
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = "https://api.polygon.io"
+BASE_URL = "https://api.massive.com"
 SNAPSHOTS_PATH = "/v2/snapshot/locale/us/markets/stocks/tickers"
 
 
@@ -87,7 +87,8 @@ class MassiveMarketData(MarketDataSource):
 
     async def _fetch_and_update(self, client: httpx.AsyncClient) -> None:
         """Fetch snapshots for all tracked tickers and update the cache."""
-        ticker_str = ",".join(sorted(self._tickers))
+        tickers_snapshot = set(self._tickers)
+        ticker_str = ",".join(sorted(tickers_snapshot))
         url = f"{BASE_URL}{SNAPSHOTS_PATH}"
 
         try:
@@ -113,7 +114,7 @@ class MassiveMarketData(MarketDataSource):
                     count += 1
 
             self._consecutive_errors = 0
-            logger.debug("Massive poll: updated %d/%d tickers", count, len(self._tickers))
+            logger.debug("Massive poll: updated %d/%d tickers", count, len(tickers_snapshot))
 
         except httpx.HTTPStatusError as e:
             status = e.response.status_code

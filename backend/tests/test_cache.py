@@ -75,3 +75,13 @@ def test_prices_are_rounded():
     ts = datetime(2025, 1, 15, 14, 30, 0, tzinfo=timezone.utc)
     update = cache.update("AAPL", 190.123456, ts)
     assert update.price == 190.12
+
+
+def test_get_all_returns_copy():
+    cache = PriceCache()
+    ts = datetime(2025, 1, 15, 14, 30, 0, tzinfo=timezone.utc)
+    cache.update("AAPL", 190.0, ts)
+    result = cache.get_all()
+    result.pop("AAPL")
+    # Mutating the returned dict should not affect the cache
+    assert cache.get("AAPL") is not None

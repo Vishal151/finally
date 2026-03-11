@@ -130,6 +130,38 @@ async def test_fetch_handles_missing_last_trade():
 
 
 @pytest.mark.asyncio
+async def test_fetch_handles_auth_error():
+    """Test that 401 responses don't crash the client."""
+    client = MassiveMarketData(api_key="bad-key")
+    client.register_ticker("AAPL")
+
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(401, text="Unauthorized")
+    )
+    async with httpx.AsyncClient(transport=transport) as mock_client:
+        await client._fetch_and_update(mock_client)
+
+    assert client._consecutive_errors == 1
+    assert client.get_latest("AAPL") is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_handles_forbidden():
+    """Test that 403 responses don't crash the client."""
+    client = MassiveMarketData(api_key="test-key")
+    client.register_ticker("AAPL")
+
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(403, text="Forbidden")
+    )
+    async with httpx.AsyncClient(transport=transport) as mock_client:
+        await client._fetch_and_update(mock_client)
+
+    assert client._consecutive_errors == 1
+    assert client.get_latest("AAPL") is None
+
+
+@pytest.mark.asyncio
 async def test_stop_is_idempotent():
     client = MassiveMarketData(api_key="test-key")
     await client.stop()
