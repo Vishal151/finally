@@ -103,3 +103,64 @@ def test_tracked_tickers():
 def test_get_current_price_unknown_ticker():
     engine = SimulationEngine(seed=42)
     assert engine.get_current_price("UNKNOWN") is None
+
+
+def test_sector_correlation():
+    """Same-sector tickers should be more correlated than cross-sector.
+
+    Uses a large tick_interval (1 hour) so GBM moves are large enough
+    for sector correlation to dominate over random event noise.
+    """
+    engine = SimulationEngine(tick_interval=3600, seed=42)
+    engine.add_ticker("AAPL")   # tech
+    engine.add_ticker("MSFT")   # tech
+    engine.add_ticker("JPM")    # finance
+
+    n_ticks = 2000
+    aapl_returns = []
+    msft_returns = []
+    jpm_returns = []
+
+    prev = engine.tick()
+    for _ in range(n_ticks):
+        curr = engine.tick()
+        aapl_returns.append(curr["AAPL"] / prev["AAPL"] - 1)
+        msft_returns.append(curr["MSFT"] / prev["MSFT"] - 1)
+        jpm_returns.append(curr["JPM"] / prev["JPM"] - 1)
+        prev = curr
+
+    def correlation(xs, ys):
+        n = len(xs)
+        mean_x = sum(xs) / n
+        mean_y = sum(ys) / n
+        cov = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys)) / n
+        std_x = (sum((x - mean_x) ** 2 for x in xs) / n) ** 0.5
+        std_y = (sum((y - mean_y) ** 2 for y in ys) / n) ** 0.5
+        if std_x == 0 or std_y == 0:
+            return 0.0
+        return cov / (std_x * std_y)
+
+    intra_sector_corr = correlation(aapl_returns, msft_returns)
+    cross_sector_corr = abs(correlation(aapl_returns, jpm_returns))
+    assert intra_sector_corr > cross_sector_corr
+
+
+def test_event_mechanism_fires():
+    """Over many ticks, the 2% random event mechanism should fire at least once."""
+    engine = SimulationEngine(seed=42)
+    engine.add_ticker("AAPL")
+
+    prices = []
+    for _ in range(500):
+        result = engine.tick()
+        prices.append(result["AAPL"])
+
+    # Look for large tick-to-tick moves (>1.5% in a single tick) as evidence of events
+    large_moves = 0
+    for i in range(1, len(prices)):
+        pct_change = abs(prices[i] / prices[i - 1] - 1)
+        if pct_change > 0.015:
+            large_moves += 1
+
+    # With 2% event probability over 500 ticks, we expect ~10 events
+    assert large_moves >= 1
