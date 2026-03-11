@@ -4,6 +4,7 @@ node_modules/
 out/
 frontend/out/
 frontend/.next/
+backend/static/
 
 # SQLite runtime database
 db/finally.db

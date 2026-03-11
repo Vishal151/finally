@@ -26,16 +26,25 @@ Single Docker container serving everything on port 8000:
 ## Quick Start
 
 ```bash
-# Clone and configure
+# Configure
 cp .env.example .env
 # Add your OPENROUTER_API_KEY to .env
 
-# Run with Docker
-docker build -t finally .
-docker run -v finally-data:/app/db -p 8000:8000 --env-file .env finally
+# Run with Docker (macOS/Linux)
+./scripts/start_mac.sh
+
+# Or with Docker manually
+docker compose up --build
+
+# Or run locally (backend only)
+cd backend && uv sync && uv run uvicorn src.app:app --port 8000
 
 # Open http://localhost:8000
 ```
+
+To stop: `./scripts/stop_mac.sh` or `docker compose down`
+
+Windows users: use `scripts/start_windows.ps1` and `scripts/stop_windows.ps1`.
 
 ## Environment Variables
 
@@ -44,19 +53,33 @@ docker run -v finally-data:/app/db -p 8000:8000 --env-file .env finally
 | `OPENROUTER_API_KEY` | Yes | OpenRouter API key for AI chat |
 | `MASSIVE_API_KEY` | No | Massive (Polygon.io) key for real market data; omit to use simulator |
 | `LLM_MOCK` | No | Set `true` for deterministic mock LLM responses (testing) |
+| `DATABASE_PATH` | No | SQLite path; defaults to `../db/finally.db` relative to backend |
+
+## Testing
+
+```bash
+# Backend unit tests (118 tests)
+cd backend && uv run pytest
+
+# E2E Playwright tests (20 tests)
+cd test && npm install && npx playwright test
+```
 
 ## Project Structure
 
 ```
 finally/
-├── frontend/    # Next.js static export
-├── backend/     # FastAPI uv project
-├── planning/    # Project documentation and agent contracts
+├── frontend/    # Next.js static export (TypeScript, Tailwind CSS)
+├── backend/     # FastAPI uv project (Python)
+│   ├── src/
+│   │   ├── market/     # Market data simulator + Massive API client
+│   │   ├── database/   # SQLite layer (schema, queries)
+│   │   ├── llm/        # LLM chat integration (OpenRouter/Cerebras)
+│   │   ├── routes/     # API endpoints
+│   │   └── app.py      # FastAPI application
+│   └── db/             # SQL schema and seed files
 ├── test/        # Playwright E2E tests
-├── db/          # SQLite volume mount (runtime)
-└── scripts/     # Start/stop helpers
+├── scripts/     # Docker start/stop scripts (macOS, Windows)
+├── db/          # SQLite volume mount (runtime, gitignored)
+└── planning/    # Project documentation
 ```
-
-## License
-
-See [LICENSE](LICENSE).
