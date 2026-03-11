@@ -232,13 +232,13 @@ __marimo__/
 .ripgreprc
 
 # IDE
-.idea/
-.vscode/
+.idea
+.vscode
 .mcp.json
 
 # Git internals (leaked into working dir)
 HEAD
 config
-hooks/
-objects/
-refs/
+hooks
+objects
+refs
