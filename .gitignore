@@ -220,3 +220,25 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Shell/system dotfiles (leaked from WSL/devcontainer)
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+.gitmodules
+.ripgreprc
+
+# IDE
+.idea/
+.vscode/
+.mcp.json
+
+# Git internals (leaked into working dir)
+HEAD
+config
+hooks/
+objects/
+refs/
